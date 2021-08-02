@@ -3,11 +3,11 @@ FASTA file merger. Take multiple alignments to the same reference sequence and p
 containing all given sequences aligned to the same reference sequence.
 
 Usage:
-    merge.py <ref> (<file> ...)
+    fasta-merge <ref> (<file> ...)
 
 Arguments:
-    <ref>       name of tag in files for reference sequence. One of the sequences
-                must contain all sequence information contained in all others
+    <ref>       name of tag in files for reference sequence. Reference sequences must be trivially
+                alignable either by pairwise alignment or matching to longest sequence.
 
     <file>      the filenames of the sequences to align
 """
@@ -17,6 +17,8 @@ from functools import reduce, partial
 from collections import namedtuple
 from difflib import SequenceMatcher
 from argopt import argopt
+from pykxnr.string_tools import pad, split_on_indices, merge_strings
+from pykxnr.utils import clamp
 import re
 
 # TODO: offset_marks
@@ -101,69 +103,6 @@ class Sequence:
         print(merged_marks)
 
         return Sequence(tag, add_marks(merged_string, merged_marks)), sequences
-
-
-def _merge_strings(a, b):
-    ai, bi, l = SequenceMatcher(None, a, b, autojunk=False).find_longest_match()
-
-    # match must include beginning of one sequence and end of at least one sequence
-    # to have merge properly calculated
-    assert (ai == 0 or bi == 0) and (ai + l == len(a) or bi + l == len(b))
-
-    a_start, overlap, a_end = split_on_indices(a, (ai, ai+l))
-    b_start, _, b_end = split_on_indices(b, (bi, bi+l))
-    return a_start + b_start + overlap + a_end + b_end
-
-
-def merge_strings(strings: list[str]):
-    # merge sequences pairwise
-    if len(strings) == 2:
-        return _merge_strings(strings[0], strings[1])
-    elif len(strings) == 1:
-        return strings[0]
-
-    return merge_strings([_merge_strings(a, b) for a, b in zip_longest(strings[:-1:2], strings[1::2], fillvalue='')])
-
-def clamp(n, low, high):
-    '''
-    clamp a number to between low and high, inclusive. Also accepts None for either low or high to
-    ignore that bound
-
-    :param n: number to clamp
-    :param low: lower bound or None
-    :param high: upper bound or None
-    :return: clamped value
-    '''
-    return min(max(n, low if low is not None else n), high if high is not None else n)
-
-def _split_on_index(seq, start):
-    '''
-    helper function to split a string on an index and return both pieces
-
-    :param iterable seq: iterable to split
-    :param int start: start of second half of sequence
-
-    :return: split sequence
-    '''
-    return seq[:start], seq[start:]
-
-
-def split_on_indices(seq, starts):
-    '''
-    given a list of indices, return pieces of an iterable split on these indices
-    such that joining the pieces return the original iterable
-
-    :param iterable seq: iterable to split
-    :param iterable starts: collection of integer indices, must be sorted
-
-    :return tuple: collection of slices
-    '''
-    first, last = _split_on_index(seq, starts[-1])
-
-    if len(starts) > 1:
-        return *split_on_indices(first, starts[:-1]), last
-    else:
-        return first, last
 
 
 def add_marks(sequence: Sequence, marks: list[mark], fill='-', offset=0):
@@ -258,21 +197,6 @@ def reindex_marks(to_adjust: list[mark], adjustment: list[mark]):
     return adjusted
 
 
-def pad(seq: str, start: int, end: int, char='-'):
-    '''
-    add characters to string to pad it to a
-    given length, adding characters to the beginning
-    to match offset, then remaining characters to end of string
-
-    :param seq: string to pad
-    :param start:
-    :param end:
-    :param char: character to add for padding
-    :return: padded string
-    '''
-    return char * start + seq + char * end
-
-
 def dict_to_fasta_str(data: dict):
     '''
     really simple fasta formatter, takes a dict of data and returns
@@ -305,8 +229,7 @@ def faster_fasta_reader(fname: str):
 
     return genes
 
-
-if __name__ == '__main__':
+def main():
     parser = argopt(__doc__, version=__version__)
     args = parser.parse_args()
 
@@ -323,3 +246,7 @@ if __name__ == '__main__':
     realigned.append(full_seq)
 
     print(dict_to_fasta_str({seq.label: seq.sequence(raw=False) for seq in realigned}))
+
+
+if __name__ == '__main__':
+    main()
