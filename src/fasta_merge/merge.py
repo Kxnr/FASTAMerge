@@ -29,6 +29,12 @@ mark = namedtuple('mark', ('start', 'len'))
 
 
 class Sequence:
+    '''
+    Class to represent a fasta sequence with spacing marks added to control alignment of
+    sequences. Enables offsetting of sequences for alignment between objects, access to
+    raw sequence data, modification of marks in sequence, and rendering sequence.
+    '''
+
     def __init__(self, label, data, offset=0, mark_char='-'):
         self.label = label
         self.data = data.replace(mark, '')
@@ -55,6 +61,13 @@ class Sequence:
 
     @offset.setter
     def offset(self, offset):
+        '''
+        modify marks when offset is changed to match newly offset sequence so that
+        accessing marks gives marks aligned to the same reference.
+
+        :param offset: integer sequence offset
+        :return: None
+        '''
         self._marks = [mark(m.start - self._offset + offset, m.len) for m in self._marks]
         self._offset = offset
 
@@ -66,7 +79,7 @@ class Sequence:
 
     def add_marks(self, *marks: mark):
         '''
-        add marks to exisitng marks sequence, combining marks that start at the same location additively
+        add marks to existing marks sequence, combining marks that start at the same location additively
 
         :param marks: marks to add to existing marks
         :return: Sequence instance, modified in-place
@@ -93,6 +106,15 @@ class Sequence:
 
     @classmethod
     def from_sequences(cls, tag, sequences):
+        '''
+        return a new sequence that represents the union of mulitple sequences, using very basic alignment to
+        merge sequences. If longest sequence is a superset of other sequences, return longest sequence with
+        merged marks. Otherwise, attempt to merge sequences pairwise and then find offsets before merging marks.
+
+        :param tag: name to give to new sequence
+        :param sequences: Sequence objects to merge
+        :return: new Sequence object for merged sequence
+        '''
         sequences = copy.deepcopy(sequences)
         merged_string = merge_strings([s.sequence(raw=True) for s in sequences])
 
@@ -217,6 +239,8 @@ def faster_fasta_reader(fname: str):
     :param fname: filename of fasta file
     :return: dict of sequences
     '''
+
+    # TODO: raise exception on invalid format
 
     genes = {}
     with open(fname, 'r') as f:

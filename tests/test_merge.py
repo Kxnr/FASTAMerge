@@ -1,5 +1,5 @@
 from unittest import TestCase
-from merge import *
+from fasta_merge.merge import *
 from tempfile import NamedTemporaryFile
 import re
 
@@ -7,32 +7,11 @@ SEQ_1 = '----AAAAAAA------AAAAAAAA----'
 SEQ_2 = 'A-AA--AAA---AAAA----AAAAA'
 MERGED = '----A-AA--AAA---A------AAA----AAAAA----'
 FASTA = \
-    f'''>1
+f'''>1
 ----AA----
 >2
 ---AAAAA-A'''
 FASTA_DICT = {'1': '----AA----', '2': '---AAAAA-A'}
-
-
-class TestStringMethods(TestCase):
-    def test_split_on_indices(self):
-        test_str = 'a' * 10
-        self.assertEqual(split_on_indices(test_str, (5,)), ('a' * 5, 'a' * 5))
-        self.assertEqual(split_on_indices(test_str, (2, 6)), ('a' * 2, 'a' * 4, 'a' * 4))
-        self.assertEqual(split_on_indices(test_str, (2, 10)), ('a' * 2, 'a' * 8, ''))
-        self.assertEqual(split_on_indices(test_str, (0, 10)), ('', test_str, ''))
-
-    def test_pad(self):
-        test_str = 'a' * 10
-        offset = 3
-        l = 20
-        padded = pad(test_str, offset, l-offset-len(test_str), char='-')
-        self.assertEqual(padded.find(test_str), offset)
-        self.assertEqual(len(padded), l)
-
-    def test_merge_strings(self):
-        strings = ['abbccdd', 'bbcc', 'ccddeeff', 'aabbcc']
-        self.assertEqual(merge_strings(strings), 'aabbccddeeff')
 
 
 class TestMarkMethods(TestCase):
