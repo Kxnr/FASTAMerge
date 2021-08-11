@@ -15,7 +15,6 @@ import copy
 from itertools import chain, groupby, zip_longest
 from functools import reduce, partial
 from collections import namedtuple
-from difflib import SequenceMatcher
 from argopt import argopt
 from pykxnr.string_tools import pad, split_on_indices, merge_strings
 from pykxnr.utils import clamp
@@ -37,7 +36,7 @@ class Sequence:
 
     def __init__(self, label, data, offset=0, mark_char='-'):
         self.label = label
-        self.data = data.replace(mark, '')
+        self.data = data.replace(mark_char, '')
         self._offset = offset
 
         padding = re.search(rf'^{mark_char}*', data)  # match from beginning of string
@@ -45,7 +44,7 @@ class Sequence:
 
         padding = re.search(rf'{mark_char}*$', data)  # match from beginning of string
         self.end_padding = padding.end() - padding.start()
-        self._marks = matches_offset(data.strip(mark), rf'[{mark}]+', global_offset=offset)
+        self._marks = matches_offset(data.strip(mark_char), rf'[{mark_char}]+', global_offset=offset)
 
     def marks(self, padding=False):
         if padding:
@@ -142,7 +141,7 @@ def add_marks(sequence: Sequence, marks: list[mark], fill='-', offset=0):
     return ''.join([seq + fill * l for l, seq in zip_longest(lens, split, fillvalue=0)])
 
 
-def matches_offset(seq: str, pattern=r'[-]+)', global_offset=0):
+def matches_offset(seq: str, pattern=r'[-]+', global_offset=0):
     '''
     find all matches of compiled regex to string and adjust start
     indices to reflect position in string if all matches were removed
@@ -227,7 +226,7 @@ def dict_to_fasta_str(data: dict):
     :param data: dict of {key: sequence} pairs
     :return: fasta formatted string
     '''
-    max_len = max(data.values(), key=lambda x: len(x))
+    max_len = len(max(data.values(), key=lambda x: len(x)))
     return "\n".join([f'>{k}\n{pad(v, 0, clamp(max_len - len(v), 0, max_len))}' for k, v in data.items()])
 
 

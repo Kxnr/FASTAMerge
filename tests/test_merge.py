@@ -19,29 +19,29 @@ class TestMarkMethods(TestCase):
         self.pattern = re.compile(r'(-+)')
 
     def test_merge_marks(self):
-        marks_1 = [(0, 1), (2, 3)]
-        marks_2 = [(0, 1), (2, 5), (7, 8)]
-        self.assertEqual(merge_marks([marks_1, marks_1]), marks_1)
-        self.assertEqual(merge_marks([marks_1, marks_2]), marks_2)
+        marks_1 = [mark(0, 1), mark(2, 3)]
+        marks_2 = [mark(0, 1), mark(2, 5), mark(7, 8)]
+        self.assertEqual(merge_marks(marks_1, marks_1), marks_1)
+        self.assertEqual(merge_marks(marks_1, marks_2), marks_2)
 
     def test_diff_marks(self):
-        marks_1 = [(0, 1), (2, 3)]
-        marks_2 = [(0, 1), (2, 4), (9, 3)]
-        self.assertEqual(diff_marks(marks_1, marks_1), [(1, 0), (5, 0)])
-        self.assertEqual(diff_marks(marks_1, marks_2), [(0, 0), (2, 1), (9, 3)])
+        marks_1 = [mark(0, 1), mark(2, 3)]
+        marks_2 = [mark(0, 1), mark(2, 4), mark(9, 3)]
+        self.assertEqual(diff_marks(marks_1, marks_1), [mark(0, 0), mark(2, 0)])
+        self.assertEqual(diff_marks(marks_1, marks_2), [mark(0, 0), mark(2, 1), mark(9, 3)])
 
     def test_reindex_marks(self):
-        marks = [(0, 1), (2, 4), (9, 3)]
-        adj = [(0, 2), (1, 2), (2, 6), (10, 11)]
-        expected = [(0, 1), (6, 4), (19, 3)]
+        marks = [mark(0, 1), mark(2, 4), mark(9, 3)]
+        adj = [mark(0, 2), mark(1, 2), mark(2, 6), mark(10, 11)]
+        expected = [mark(0, 1), mark(6, 4), mark(19, 3)]
         self.assertEqual(reindex_marks(marks, adj), expected)
 
     def test_add_marks(self):
-        marks = [(1, 1), (3, 2), (6, 3), (10, 4)]
+        marks = [mark(1, 1), mark(3, 2), mark(6, 3), mark(10, 4)]
         self.assertEqual(add_marks('A' * 15, marks), SEQ_2)
 
     def test_matches_offset(self):
-        expected = [(1, 1), (3, 2), (6, 3), (10, 4)]
+        expected = [mark(1, 1), mark(3, 2), mark(6, 3), mark(10, 4)]
         self.assertEqual(matches_offset(SEQ_2), expected)
 
 
